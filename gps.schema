@@ -1,0 +1,37 @@
+CREATE TABLE POMIARY(
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+    mode TEXT,
+    fields TEXT,
+    time TEXT,
+    time_aquired TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    ept TEXT,
+    latitude REAL,
+    longitude REAL,
+    eph TEXT,
+    altitude TEXT,
+    epv TEXT,
+    track TEXT,
+    epd TEXT,
+    speed TEXT,
+    eps TEXT,
+    climb TEXT,
+    epc TEXT,
+    sat_seen INTEGER,
+    sat_used INTEGER,
+    apaddr TEXT,
+    essid TEXT,
+    siglevel INTEGER,
+    nlevel INTEGER,
+    quality INTEGER,
+    sent INTEGER DEFAULT 0,
+    sent_timestamp TIMESTAMP
+);
+CREATE TABLE sieci (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+    ssid TEXT,
+    bssid, TEXT,
+    siglevel INTEGER,
+    nlevel, INTEGER,
+    quality INTEGER,
+    pomiar_gps INTEGER
+);
