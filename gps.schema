@@ -1,37 +1,41 @@
-CREATE TABLE POMIARY(
+CREATE TABLE measurement_wifi (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+    id_known_wifi INTEGER,
+    id_measurement_gps INTEGER,
+    siglevel INTEGER,
+    nlevel INTEGER,
+    quality INTEGER
+);
+CREATE TABLE measurement_gps (
     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
     mode TEXT,
     fields TEXT,
-    time TEXT,
-    time_aquired TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    ept TEXT,
     latitude REAL,
     longitude REAL,
-    eph TEXT,
-    altitude TEXT,
-    epv TEXT,
-    track TEXT,
-    epd TEXT,
-    speed TEXT,
     eps TEXT,
+    epd TEXT,
+    altitude TEXT,
+    eph TEXT,
+    track TEXT,
+    ept TEXT,
+    speed TEXT,
+    epv TEXT,
     climb TEXT,
     epc TEXT,
     sat_seen INTEGER,
     sat_used INTEGER,
-    apaddr TEXT,
-    essid TEXT,
-    siglevel INTEGER,
-    nlevel INTEGER,
-    quality INTEGER,
+    time TEXT,
+    time_aquired TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     sent INTEGER DEFAULT 0,
     sent_timestamp TIMESTAMP
 );
-CREATE TABLE sieci (
+CREATE TABLE known_wifi (
     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
     ssid TEXT,
-    bssid, TEXT,
-    siglevel INTEGER,
-    nlevel, INTEGER,
-    quality INTEGER,
-    pomiar_gps INTEGER
+    bssid TEXT,
+    encryption TEXT,
+    credentials TEXT,
+    latitude REAL,
+    longitude REAL,
+    epd REAL
 );
