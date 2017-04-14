@@ -16,7 +16,7 @@ def log(str):
     print "[%s] gps: %s" % (t.strftime("%Y-%m-%d %H:%M:%S"),str)
     sys.stdout.flush()
 
-def check_pid(pid):        
+def check_pid(pid):
    try:
       os.kill(pid, 0)
    except OSError:
@@ -57,7 +57,7 @@ def on_changed(device, data):
     global first
     global count
     pomiar_id = False
-    delta = datetime.now() - poczatek  
+    delta = datetime.now() - poczatek
     if delta.seconds > 780:
       log("No fix found in more then 600 sec")
       data.stop()
@@ -70,18 +70,49 @@ def on_changed(device, data):
       if not has_fix:
           log("Fix acquired.")
           has_fix = True
-      wifi = iwlibs.Wireless("wlan0")
-      aq = wifi.getStatistics()[1]
-      Siglevel = aq.siglevel
-      Nlevel = aq.nlevel
-      Quality = aq.quality
-      
+
       poczatek = datetime.now()
-      cur = con.cursor()    
-      cur.execute("INSERT INTO POMIARY (mode,fields,time,ept,latitude,longitude,eph,altitude,epv,track,epd,speed,eps,climb,epc,sat_seen,sat_used,apaddr,essid,siglevel,nlevel,quality) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(device.fix[0],device.fix[1],device.fix[2],device.fix[3],device.fix[4],device.fix[5],device.fix[6],device.fix[7],device.fix[8],device.fix[9],device.fix[10],device.fix[11],device.fix[12],device.fix[13],device.fix[14],device.satellites_in_view,device.satellites_in_use,wifi.getAPaddr(),wifi.getEssid(),Siglevel,Nlevel,Quality))
+      cur = con.cursor()
+      cur.execute("""INSERT INTO measurement_gps
+        (mode,
+         fields,
+         gps_timestamp,
+         ept,latitude,
+         longitude,
+         eph,
+         altitude,
+         epv,
+         track,
+         epd,
+         speed,
+         eps,
+         climb,
+         epc,
+         sat_seen,
+         sat_used
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+        (device.fix[0],
+         device.fix[1],
+         device.fix[2],
+         device.fix[3],
+         device.fix[4],
+         device.fix[5],
+         device.fix[6],
+         device.fix[7],
+         device.fix[8],
+         device.fix[9],
+         device.fix[10],
+         device.fix[11],
+         device.fix[12],
+         device.fix[13],
+         device.fix[14],
+         device.satellites_in_view,
+         device.satellites_in_use
+        )
+      )
       con.commit()
       cur.execute("SELECT last_insert_rowid() AS LAST")
-      pomiar_id = cur.fetchone()[0] 
+      pomiar_id = cur.fetchone()[0]
       #if first or not p.poll():
       #    first = 0
           #p = Popen(['/root/bin/gps_send.py'])
@@ -108,25 +139,76 @@ def geolocate_wifi(pomiar_id=False):
     for siec in iwlibs.Iwscan("wlan0",fullscan = True):
       if pomiar_id:
         cur = con.cursor()
-        i = i + 1   
-        cur.execute("INSERT INTO sieci(ssid,bssid,siglevel,nlevel,quality,pomiar_gps) VALUES (?,?,?,?,?,?)",(siec.essid,siec.bssid,siec.quality.siglevel,siec.quality.nlevel,siec.quality.quality,pomiar_id))
+        i = i + 1
+        cur.execute("""
+            SELECT ID
+            FROM known_wifi
+            WHERE bssid = ?;
+        """,(siec.bssid))
+        wifi_id = cur.fetchone()[0]
+        if not wifi_id:
+            cur.execute("""
+                INSERT INTO known_wifi (
+                    ssid,bssid
+                ) VALUES (?,?)
+            """,(siec.ssid,siec.bssid)
+            )
+            con.commit()
+            cur.execute("SELECT last_insert_rowid() AS LAST")
+            wifi_id = cur.fetchone()[0]
+        cur.execute("""
+            INSERT INTO measurement_wifi (
+                 siglevel,
+                 nlevel,
+                 quality,
+                 id_known_wifi,
+                 id_measurement_gps
+                ) VALUES (?,?,?,?,?)""",
+                (
+                 siec.quality.siglevel,
+                 siec.quality.nlevel,
+                 siec.quality.quality,
+                 wifi_id,
+                 pomiar_id
+                )
+        )
         con.commit()
 
       if best_quality < siec.quality.quality:
         cur = con.cursor()
-        cur.execute("select * from znane_sieci WHERE bssid = ?;",[siec.bssid])
+        cur.execute(
+            """
+            SELECT *
+            FROM known_wifi
+            WHERE bssid = ?
+            AND real_coord = 1;
+            """,
+            [siec.bssid]
+        )
         wynik = cur.fetchone()
         if(wynik):
           best_bssid = siec.bssid
           best_quality = siec.quality.quality
-          best_wifi_coord = (wynik['lat'],wynik['long'],wynik['delta'])
+          best_wifi_coord = (wynik['latitude'],wynik['longitude'],wynik['epd'])
           best_siec = siec
 
     if i > 0:
-        log("WiFi found: %s " % i)  
+        log("WiFi found: %s " % i)
     if best_bssid != "00:00:00:00:00:00":
         log("Known WiFi found: %s..." % best_siec.essid)
-        cur.execute("INSERT INTO POMIARY (mode,latitude,longitude,eph,apaddr,essid,siglevel,nlevel,quality) VALUES (3,?,?,?,?,?,?,?,?)", (best_wifi_coord[0],best_wifi_coord[1],best_wifi_coord[2],best_siec.bssid,best_siec.essid,best_siec.quality.siglevel,best_siec.quality.nlevel,best_siec.quality.quality))
+        cur.execute("""
+            INSERT INTO measurement_gps (
+                mode,
+                latitude,
+                longitude,
+                eph
+                )
+             VALUES ('wifi',?,?,?)""",
+             (best_wifi_coord[0],
+              best_wifi_coord[1],
+              best_wifi_coord[2]
+             )
+        )
         con.commit()
         #p = Popen(['/root/bin/gps_send.py'])
         return True
@@ -184,7 +266,7 @@ while True:
 
     gobject.idle_add(start_location, control)
     loop.run()
-  else: 
+  else:
     not_found_counter = 0
   if i < 300:
     i = i + 1

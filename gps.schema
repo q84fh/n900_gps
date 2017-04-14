@@ -1,5 +1,5 @@
 CREATE TABLE measurement_wifi (
-    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     id_known_wifi INTEGER,
     id_measurement_gps INTEGER,
     siglevel INTEGER,
@@ -7,7 +7,7 @@ CREATE TABLE measurement_wifi (
     quality INTEGER
 );
 CREATE TABLE measurement_gps (
-    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     mode TEXT,
     fields TEXT,
     latitude REAL,
@@ -24,18 +24,19 @@ CREATE TABLE measurement_gps (
     epc TEXT,
     sat_seen INTEGER,
     sat_used INTEGER,
-    time TEXT,
-    time_aquired TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    gps_timestamp TEXT,
+    system_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     sent INTEGER DEFAULT 0,
     sent_timestamp TIMESTAMP
 );
 CREATE TABLE known_wifi (
-    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     ssid TEXT,
     bssid TEXT,
     encryption TEXT,
     credentials TEXT,
     latitude REAL,
     longitude REAL,
-    epd REAL
+    epd REAL,
+    real_coord INT
 );
