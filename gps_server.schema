@@ -1,19 +1,22 @@
+use m12951_gps;
+
 DROP TABLE measurement_wifi;
 DROP TABLE measurement_gps;
 DROP TABLE known_wifi;
+
 CREATE TABLE measurement_wifi (
-    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    id INTEGER,
     id_known_wifi INTEGER,
     id_measurement_gps INTEGER,
     siglevel INTEGER,
     nlevel INTEGER,
     quality INTEGER,
-    system_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    sent INTEGER DEFAULT 0,
+    system_timestamp INTEGER,
+    sent INTEGER,
     sent_timestamp TIMESTAMP
 );
 CREATE TABLE measurement_gps (
-    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    id INTEGER,
     mode TEXT,
     fields TEXT,
     latitude REAL,
@@ -31,12 +34,12 @@ CREATE TABLE measurement_gps (
     sat_seen INTEGER,
     sat_used INTEGER,
     gps_timestamp TEXT,
-    system_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    sent INTEGER DEFAULT 0,
+    system_timestamp INTEGER,
+    sent INTEGER,
     sent_timestamp TIMESTAMP
 );
 CREATE TABLE known_wifi (
-    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    id INTEGER,
     ssid TEXT,
     bssid TEXT,
     encryption TEXT,
@@ -45,23 +48,7 @@ CREATE TABLE known_wifi (
     longitude REAL,
     epd REAL,
     real_coord INT,
-    system_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    sent INTEGER DEFAULT 0,
+    system_timestamp INTEGER,
+    sent INTEGER,
     sent_timestamp TIMESTAMP
-);
-
-INSERT INTO known_wifi (
-    ssid,
-    bssid,
-    latitude,
-    longitude,
-    epd,
-    real_coord
-) VALUES (
-    'zjadlabymciastko2',
-    'C8:B3:73:41:C1:9C',
-    53.0124858766794,
-    18.5796755086631,
-    40,
-    1
 );

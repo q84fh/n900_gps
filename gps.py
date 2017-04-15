@@ -36,7 +36,7 @@ def check_fix(device):
     log("Device has not fix.")
     return False
   if device.satellites_in_use == 0:
-    log("0 sattelites in use.")
+    log("0 sattelites in use, %s visible." % device.satellites_in_view)
     return False
   if not device.fix[1] & location.GPS_DEVICE_LATLONG_SET:
     log("Device does not have latlong set.")
@@ -73,11 +73,13 @@ def on_changed(device, data):
 
       poczatek = datetime.now()
       cur = con.cursor()
-      cur.execute("""INSERT INTO measurement_gps
+      cur.execute("""
+        INSERT INTO measurement_gps
         (mode,
          fields,
          gps_timestamp,
-         ept,latitude,
+         ept,
+         latitude,
          longitude,
          eph,
          altitude,
@@ -90,7 +92,7 @@ def on_changed(device, data):
          epc,
          sat_seen,
          sat_used
-        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (device.fix[0],
          device.fix[1],
          device.fix[2],
@@ -140,22 +142,27 @@ def geolocate_wifi(pomiar_id=False):
       if pomiar_id:
         cur = con.cursor()
         i = i + 1
+
         cur.execute("""
             SELECT ID
             FROM known_wifi
-            WHERE bssid = ?;
-        """,(siec.bssid))
-        wifi_id = cur.fetchone()[0]
+            WHERE bssid=?;
+        """,(siec.bssid,))
+        wifi_id = cur.fetchone()
         if not wifi_id:
             cur.execute("""
                 INSERT INTO known_wifi (
                     ssid,bssid
                 ) VALUES (?,?)
-            """,(siec.ssid,siec.bssid)
+            """,(siec.essid,siec.bssid,)
             )
             con.commit()
             cur.execute("SELECT last_insert_rowid() AS LAST")
-            wifi_id = cur.fetchone()[0]
+            wifi_id = cur.fetchone()
+
+        if wifi_id:
+            wifi_id = wifi_id[0]
+
         cur.execute("""
             INSERT INTO measurement_wifi (
                  siglevel,
