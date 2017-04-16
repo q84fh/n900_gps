@@ -56,9 +56,23 @@ def push_data(table_name):
 
     cur.execute("select * from {} WHERE SENT != 1 LIMIT 10".format(table_name))
     rows = cur.fetchall()
+    if not rows:
+        return False
 
     r = requests.post(url, data = { table_name: json.dumps(rows) } )
-    print(r.text)
+
+    cur.execute("""
+        UPDATE {}
+            SET sent = 1, sent_timestamp=CURRENT_TIMESTAMP
+        WHERE id IN ( {} )""".
+        format(
+            table_name,
+            ",".join("?"*len(r.json()[table_name]))
+        ),
+        r.json()[table_name]
+    )
+    con.commit()
+
     con.close()
 
 push_data('known_wifi');
